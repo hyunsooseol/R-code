@@ -1,14 +1,11 @@
-
 library(tidyverse)
 data <- read.csv("mix.csv")
-
 ##############
-
 boot.sample <- function(df) {
-  df[sample(nrow(df), replace = TRUE),,drop=FALSE]
+  df[sample(nrow(df), replace = TRUE),,]
 }
 
-boot <- map(1:20, ~ boot.sample(data)) 
+boot <- map(1:100, ~ boot.sample(data)) 
 
 infit <- function(data){
   
@@ -19,21 +16,15 @@ infit <- function(data){
       model = "RSM",
       n.c = 1
     )
-  
-  # item infit--------
+ 
  infit<- res1$item.par$in.out[, 1]
- return(infit)
-   
+ 
 }
+boot.infit<- map_dfc(boot, ~ infit(data=.x))# data=.x 반드시 사용 
+infit.low <- apply(boot.infit, 1, stats::quantile,probs=.025)
+infit.high <- apply(boot.infit, 1, stats::quantile,probs=.975)
 
-boot.infit<- map(boot, ~ infit(data=.x))# data=.x 반드시 사용 
-boot.infit
-# boot.infit2 <- unlist(boot.infit)# 벡터로묶을때 사용
 
-infitd<- map(boot.infit,~as.data.frame(.)) # data frame 만들때
-infitd
-
-map(infitd, ~stats::quantile(data=.x))
 
 
 
